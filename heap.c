@@ -217,5 +217,6 @@ void heap_sort(void *elementos[], size_t cant, cmp_func_t cmp){
     for(int i = 1; i < cant; i++){
         swap(elementos,0,cant-i);
         downheap_aux(elementos, 0, cmp, cant-i);
+        // TODO: Test
     }
 }
