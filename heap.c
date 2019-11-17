@@ -2,17 +2,18 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include "heap.h"
 #define TAM_INICIAL 50
 #define FACTOR_REDIM 2
 #define CONDICION_DISMINUCION 4
 
 
-typedef struct heap{
+struct heap{
     void** vector;
     cmp_func_t cmp;
     size_t tam;
     size_t cantidad;
-} heap_t;
+};
 
 
 size_t posicion_hijo_izq(size_t padre){
@@ -30,12 +31,12 @@ size_t posicion_padre(size_t hijo){
 
 void swap(void** vector, size_t elem1, size_t elem2){
     void* aux = vector[elem1];
-    vector[elem1] = elem2;
+    vector[elem1] = vector[elem2];
     vector[elem2] = aux;
 }
 
 
-size_t hijo_menor(void* vector, size_t posicionPadre, size_t maximo, cmp_func_t cmp){
+size_t hijo_menor(void** vector, size_t posicionPadre, size_t maximo, cmp_func_t cmp){
     size_t posHijoIzq = posicion_hijo_izq(posicionPadre);
     size_t posHijoDer = posicion_hijo_der(posicionPadre);
     if(posHijoIzq > maximo && posHijoDer > maximo){
@@ -47,7 +48,7 @@ size_t hijo_menor(void* vector, size_t posicionPadre, size_t maximo, cmp_func_t 
     }
     void* hijoIzq = vector[posHijoIzq];
     void* hijoDer = vector[posHijoDer];
-    if(heap->cmp(hijoIzq,hijoDer) < 0){
+    if(cmp(hijoIzq,hijoDer) < 0){
         return posHijoIzq;
     }
     return posHijoDer;
@@ -55,18 +56,22 @@ size_t hijo_menor(void* vector, size_t posicionPadre, size_t maximo, cmp_func_t 
 
 
 void upheap(heap_t* heap, size_t posicion){
+    if(heap->cantidad == 1 || posicion == 0){
+        return;
+    }
     size_t posicionPadre = posicion_padre(posicion);
+    //printf("posicion padre: %ld\n",posicionPadre);
     void* hijo = heap->vector[posicion];
     void* padre = heap->vector[posicionPadre];
     if(heap->cmp(padre,hijo) <= 0){
         return;
     }
-    swap(heap->vector,posicion,posHijoMenor);
-    upheap(heap,padre);
+    swap(heap->vector,posicion,posicionPadre);
+    upheap(heap,posicionPadre);
 }
 
 
-void downheap_aux(void* vector, size_t posicion, cmp_func_t cmp, size_t cantidad){
+void downheap_aux(void** vector, size_t posicion, cmp_func_t cmp, size_t cantidad){
     size_t posHijoMenor = hijo_menor(vector, posicion, cantidad, cmp);
     if(posHijoMenor == 0){ //si no tiene hijos
         return;
@@ -88,7 +93,7 @@ void downheap(heap_t* heap, size_t posicion){
 
 void heapify(void* vector, size_t n, cmp_func_t cmp){
     size_t medio = (n / 2) -1;
-    for(int i = medio; i>0; i--){
+    for(size_t i = medio; i>0; i--){
         downheap_aux(vector, medio, cmp, n);
     }
 }
@@ -99,9 +104,7 @@ bool vector_redimensionar(void* vector, size_t tamNuevo) {
     if (tamNuevo > 0 && datosNuevos == NULL) {
         return false;
     }
-
-    vector->vector = datosNuevos;
-    vector->tam = tamNuevo;
+    vector = datosNuevos;
     return true;
 }
 
@@ -120,8 +123,8 @@ heap_t *heap_crear_arr(void *arreglo[], size_t n, cmp_func_t cmp){
         vectorNuevo[i] = arreglo[i];
     }
     heapNuevo->cantidad = n;
-    heapNuevo->capacidad = n;
-    heapNuevo->cmp = cmp_func_t;
+    heapNuevo->tam = n;
+    heapNuevo->cmp = cmp;
     heapify(vectorNuevo,n,cmp);
     heapNuevo->vector = vectorNuevo;
     return heapNuevo;
@@ -169,19 +172,20 @@ bool heap_encolar(heap_t *heap, void *elem){
     if(elem == NULL){
         return false;
     }
-    if (heap->cantidad == heap->capacidad -1){
-        if(vector_redimensionar(heap->vector,heap->capacidad * FACTOR_REDIM) == false){
+    if (heap->cantidad == heap->tam -1){
+        if(vector_redimensionar(heap->vector,heap->tam * FACTOR_REDIM) == false){
             return false;
         }
+        heap->tam *= FACTOR_REDIM;
     }
     heap->vector[heap->cantidad] = elem;
     heap->cantidad += 1;
-    // TODO: UPHEAP
-    return true; // FIXME: return(upheap(heap,elem))
+    upheap(heap,heap->cantidad-1);
+    return true; // FIXME: return(upheap(heap,elem)) la funcion upheap deberia devolver un bool.
 }
 
 
-void *heap_desencolar(heap_t *heap){
+void* heap_desencolar(heap_t *heap){
     if(heap->cantidad == 0){
         return NULL;
     }
@@ -192,9 +196,12 @@ void *heap_desencolar(heap_t *heap){
     heap->vector[heap->cantidad] = NULL;
     downheap(heap,0);
 
-    if (heap->cantidad * CONDICION_DISMINUCION <= heap->capacidad) && (heap->capacidad > TAM_INICIAL){
-        vector_redimensionar(heap->vector,heap->capacidad / FACTOR_REDIM);
+    if ((heap->cantidad * CONDICION_DISMINUCION <= heap->tam) && (heap->tam > TAM_INICIAL)){
+        if (vector_redimensionar(heap->vector,heap->tam / FACTOR_REDIM)){
+            heap->tam /= FACTOR_REDIM;
+        }
     }
+
     return datoDevolver;
 }
 
@@ -217,6 +224,5 @@ void heap_sort(void *elementos[], size_t cant, cmp_func_t cmp){
     for(int i = 1; i < cant; i++){
         swap(elementos,0,cant-i);
         downheap_aux(elementos, 0, cmp, cant-i);
-        // TODO: Test
     }
 }
