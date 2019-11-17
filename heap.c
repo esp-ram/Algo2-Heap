@@ -15,6 +15,7 @@ struct heap{
     size_t cantidad;
 };
 
+////////////////Funciones Auxiliares
 
 size_t posicion_hijo_izq(size_t padre){
     return((padre*2) + 1);
@@ -108,6 +109,7 @@ bool vector_redimensionar(heap_t* heap, size_t tamNuevo) {
     return true;
 }
 
+///////////////////Primitivas
 
 heap_t *heap_crear_arr(void *arreglo[], size_t n, cmp_func_t cmp){
     heap_t* heapNuevo = malloc(sizeof(heap_t));
@@ -180,7 +182,7 @@ bool heap_encolar(heap_t *heap, void *elem){
     heap->vector[heap->cantidad] = elem;
     heap->cantidad += 1;
     upheap(heap,heap->cantidad-1);
-    return true; // FIXME: return(upheap(heap,elem)) la funcion upheap deberia devolver un bool.
+    return true;
 }
 
 
@@ -214,7 +216,7 @@ void heap_destruir(heap_t *heap, void destruir_elemento(void *e)){
     free(heap);
 }
 
-
+///////////////////////HeapSort
 
 void heap_sort(void *elementos[], size_t cant, cmp_func_t cmp){
     heapify(elementos,cant,cmp);
