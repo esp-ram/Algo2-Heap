@@ -221,7 +221,7 @@ void prueba_heap_volumen(size_t cant_elementos){
 }
 
 
-int main(){
+void pruebas_heap_alumno(){
     prueba_heap_vacio();
     prueba_heap_encolar();
     prueba_heap_desencolar();
@@ -229,5 +229,4 @@ int main(){
     prueba_heap_volumen(1020);
     prueba_crear_con_arreglo();
     prueba_heap_sort();
-    return 0;
 }

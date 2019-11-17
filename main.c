@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
         }
         printf("\n~~~ PRUEBAS CÁTEDRA ~~~\n");
         pruebas_heap_catedra();
-    #endif 
-
+    #endif
+    
     return failure_count() > 0;
 }
