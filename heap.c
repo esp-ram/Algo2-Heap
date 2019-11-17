@@ -36,22 +36,21 @@ void swap(void** vector, size_t elem1, size_t elem2){
 }
 
 
-size_t hijo_menor(void** vector, size_t posicionPadre, size_t maximo, cmp_func_t cmp){
+size_t hijo_mayor(void** vector, size_t posicionPadre, size_t maximo, cmp_func_t cmp){
     size_t posHijoIzq = posicion_hijo_izq(posicionPadre);
     size_t posHijoDer = posicion_hijo_der(posicionPadre);
-    if(posHijoIzq > maximo && posHijoDer > maximo){
+
+    if(posHijoIzq >= maximo){
         return 0;
-    }else if (posHijoIzq > maximo){
-        return posHijoDer;
-    }else if (posHijoDer > maximo){
+    }else if (posHijoDer >= maximo){
         return posHijoIzq;
     }
     void* hijoIzq = vector[posHijoIzq];
     void* hijoDer = vector[posHijoDer];
     if(cmp(hijoIzq,hijoDer) < 0){
-        return posHijoIzq;
+        return posHijoDer;
     }
-    return posHijoDer;
+    return posHijoIzq;
 }
 
 
@@ -60,10 +59,9 @@ void upheap(heap_t* heap, size_t posicion){
         return;
     }
     size_t posicionPadre = posicion_padre(posicion);
-    //printf("posicion padre: %ld\n",posicionPadre);
     void* hijo = heap->vector[posicion];
     void* padre = heap->vector[posicionPadre];
-    if(heap->cmp(padre,hijo) <= 0){
+    if(heap->cmp(hijo,padre) <= 0){
         return;
     }
     swap(heap->vector,posicion,posicionPadre);
@@ -72,17 +70,18 @@ void upheap(heap_t* heap, size_t posicion){
 
 
 void downheap_aux(void** vector, size_t posicion, cmp_func_t cmp, size_t cantidad){
-    size_t posHijoMenor = hijo_menor(vector, posicion, cantidad, cmp);
-    if(posHijoMenor == 0){ //si no tiene hijos
+
+    size_t posHijoMayor = hijo_mayor(vector, posicion, cantidad, cmp);
+    if(posHijoMayor == 0){ //si no tiene hijos
         return;
     }
     void* padre = vector[posicion];
-    void* hijoMenor = vector[posHijoMenor];
-    if(cmp(padre,hijoMenor) <= 0){
+    void* hijoMayor = vector[posHijoMayor];
+    if(cmp(padre,hijoMayor) >= 0){
         return;
     }
-    swap(vector,posicion,posHijoMenor);
-    downheap_aux(vector,posHijoMenor,cmp, cantidad);
+    swap(vector,posicion, posHijoMayor);
+    downheap_aux(vector, posHijoMayor, cmp, cantidad);
 }
 
 
@@ -92,19 +91,22 @@ void downheap(heap_t* heap, size_t posicion){
 
 
 void heapify(void* vector, size_t n, cmp_func_t cmp){
-    size_t medio = (n / 2) -1;
+    size_t medio = (n / 2);
     for(size_t i = medio; i>0; i--){
-        downheap_aux(vector, medio, cmp, n);
+        downheap_aux(vector, i-1, cmp, n);
     }
 }
 
 
-bool vector_redimensionar(void* vector, size_t tamNuevo) {
-    int* datosNuevos = realloc(vector, tamNuevo * sizeof(void*));
-    if (tamNuevo > 0 && datosNuevos == NULL) {
+bool vector_redimensionar(heap_t* heap, size_t tamNuevo) {
+    printf("entra redimesion con tamano %ld\n",tamNuevo);
+    void** datosNuevos = realloc(heap->vector, tamNuevo * sizeof(void*));
+    if(datosNuevos == NULL) {
         return false;
     }
-    vector = datosNuevos;
+    heap->vector = datosNuevos;
+    heap->tam = tamNuevo;
+    printf("sale de redimension\n" );
     return true;
 }
 
@@ -173,10 +175,10 @@ bool heap_encolar(heap_t *heap, void *elem){
         return false;
     }
     if (heap->cantidad == heap->tam -1){
-        if(vector_redimensionar(heap->vector,heap->tam * FACTOR_REDIM) == false){
+        printf("necesita redim\n");
+        if(vector_redimensionar(heap,heap->tam * FACTOR_REDIM) == false){
             return false;
         }
-        heap->tam *= FACTOR_REDIM;
     }
     heap->vector[heap->cantidad] = elem;
     heap->cantidad += 1;
@@ -196,9 +198,9 @@ void* heap_desencolar(heap_t *heap){
     heap->vector[heap->cantidad] = NULL;
     downheap(heap,0);
 
-    if ((heap->cantidad * CONDICION_DISMINUCION <= heap->tam) && (heap->tam > TAM_INICIAL)){
-        if (vector_redimensionar(heap->vector,heap->tam / FACTOR_REDIM)){
-            heap->tam /= FACTOR_REDIM;
+    if ((heap->cantidad * CONDICION_DISMINUCION <= heap->tam) && (heap->cantidad > TAM_INICIAL)){
+        if (vector_redimensionar(heap,heap->tam / FACTOR_REDIM)){
+            //heap->tam /= FACTOR_REDIM;
         }
     }
 
