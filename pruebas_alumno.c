@@ -103,7 +103,6 @@ void prueba_heap_desencolar(){
     print_test("La cantidad de elementos debe ser 0", heap_cantidad(heap) == 0);
     print_test("El maximo debe ser NULL", heap_ver_max(heap) == NULL);
 
-
     print_test("El heap esta vacio", heap_esta_vacio(heap) == true);
     heap_destruir(heap, NULL);
 }
@@ -191,6 +190,38 @@ void prueba_crear_con_arreglo(){
 }
 
 
+void prueba_heap_volumen(size_t cant_elementos){
+    printf("\nprueba de volumen\n");
+    heap_t *heap = heap_crear(comparacion);
+    int* vector[cant_elementos];
+    for (int i = 0; i < cant_elementos; i++) {
+        int *elemento = malloc(sizeof(int));
+        *elemento = i;
+        vector[i] = elemento;
+    }
+
+    bool encolar_correcto = true;
+    for (int i = 0; i < cant_elementos; i++) {
+        if(!heap_encolar(heap, vector[i])){
+            encolar_correcto = false;
+            break;
+        }
+    }
+
+    printf("Se encolaron %ld elementos correctamente" , cant_elementos);
+    print_test("" , encolar_correcto == true);
+
+
+    while(heap_cantidad(heap) != 0){
+        free(heap_desencolar(heap));
+    }
+
+
+    print_test("Se desencolaron todos los elementos", heap_cantidad(heap) == 0);
+    heap_destruir(heap, free);
+}
+
+
 int main(){
     prueba_heap_vacio();
     prueba_heap_encolar();
@@ -198,5 +229,6 @@ int main(){
     prueba_crear_con_arreglo();
     prueba_heap_sort();
     prueba_heap_destruir();
+    prueba_heap_volumen(550);
     return 0;
 }

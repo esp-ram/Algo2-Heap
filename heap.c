@@ -99,14 +99,12 @@ void heapify(void* vector, size_t n, cmp_func_t cmp){
 
 
 bool vector_redimensionar(heap_t* heap, size_t tamNuevo) {
-    printf("entra redimesion con tamano %ld\n",tamNuevo);
     void** datosNuevos = realloc(heap->vector, tamNuevo * sizeof(void*));
     if(datosNuevos == NULL) {
         return false;
     }
     heap->vector = datosNuevos;
     heap->tam = tamNuevo;
-    printf("sale de redimension\n" );
     return true;
 }
 
@@ -175,7 +173,6 @@ bool heap_encolar(heap_t *heap, void *elem){
         return false;
     }
     if (heap->cantidad == heap->tam -1){
-        printf("necesita redim\n");
         if(vector_redimensionar(heap,heap->tam * FACTOR_REDIM) == false){
             return false;
         }
@@ -200,7 +197,6 @@ void* heap_desencolar(heap_t *heap){
 
     if ((heap->cantidad * CONDICION_DISMINUCION <= heap->tam) && (heap->cantidad > TAM_INICIAL)){
         if (vector_redimensionar(heap,heap->tam / FACTOR_REDIM)){
-            //heap->tam /= FACTOR_REDIM;
         }
     }
 
