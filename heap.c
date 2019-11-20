@@ -174,7 +174,7 @@ bool heap_encolar(heap_t *heap, void *elem){
     if(elem == NULL){
         return false;
     }
-    if (heap->cantidad == heap->tam -1){
+    if (heap->cantidad >= heap->tam -1){
         if(vector_redimensionar(heap,heap->tam * FACTOR_REDIM) == false){
             return false;
         }

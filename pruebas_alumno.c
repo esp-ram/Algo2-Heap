@@ -172,9 +172,14 @@ void prueba_crear_con_arreglo(){
     int seis = 6;
     int once = 11;
     int nueve = 9;
+    int trece = 13;
     int* vector_prueba[6] = {&uno,&cinco,&seis,&siete,&nueve,&once};
     heap_t* heap = heap_crear_arr((void**)vector_prueba,6,comparacion);
-
+    heap_encolar(heap,&trece);
+    printf("la cantidad es 7");
+    print_test(" ", heap_cantidad(heap) == 7);
+    printf("desencolar devuelve 13");
+    print_test(" ", heap_desencolar(heap) == &trece);
     for(int i = 0; i < 6; i++){
         printf("la cantidad es %d",6-i);
         print_test(" ", heap_cantidad(heap) == (6-i));
