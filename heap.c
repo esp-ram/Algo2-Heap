@@ -6,6 +6,7 @@
 #define TAM_INICIAL 50
 #define FACTOR_REDIM 2
 #define CONDICION_DISMINUCION 4
+#define CONDICION_AUMENTO 3
 
 
 struct heap{
@@ -41,9 +42,7 @@ size_t hijo_mayor(void** vector, size_t posicionPadre, size_t maximo, cmp_func_t
     size_t posHijoIzq = posicion_hijo_izq(posicionPadre);
     size_t posHijoDer = posicion_hijo_der(posicionPadre);
 
-    if(posHijoIzq >= maximo){
-        return 0;
-    }else if (posHijoDer >= maximo){
+    if (posHijoDer >= maximo){
         return posHijoIzq;
     }
     void* hijoIzq = vector[posHijoIzq];
@@ -70,12 +69,21 @@ void upheap(heap_t* heap, size_t posicion){
 }
 
 
-void downheap_aux(void** vector, size_t posicion, cmp_func_t cmp, size_t cantidad){
+bool tiene_hijos(size_t posicionPadre, size_t maximo){
+    size_t posHijoIzq = posicion_hijo_izq(posicionPadre);
+    if(posHijoIzq >= maximo){
+        return false;
+    }
+    return true;
+}
 
-    size_t posHijoMayor = hijo_mayor(vector, posicion, cantidad, cmp);
-    if(posHijoMayor == 0){ //si no tiene hijos
+
+
+void downheap_aux(void** vector, size_t posicion, cmp_func_t cmp, size_t cantidad){
+    if(!tiene_hijos(posicion,cantidad)){
         return;
     }
+    size_t posHijoMayor = hijo_mayor(vector, posicion, cantidad, cmp);
     void* padre = vector[posicion];
     void* hijoMayor = vector[posHijoMayor];
     if(cmp(padre,hijoMayor) >= 0){
@@ -83,11 +91,6 @@ void downheap_aux(void** vector, size_t posicion, cmp_func_t cmp, size_t cantida
     }
     swap(vector,posicion, posHijoMayor);
     downheap_aux(vector, posHijoMayor, cmp, cantidad);
-}
-
-
-void downheap(heap_t* heap, size_t posicion){
-    downheap_aux(heap->vector, posicion, heap->cmp, heap->cantidad);
 }
 
 
@@ -100,6 +103,9 @@ void heapify(void* vector, size_t n, cmp_func_t cmp){
 
 
 bool vector_redimensionar(heap_t* heap, size_t tamNuevo) {
+    if (heap->tam+1 < TAM_INICIAL){
+        return true;
+    }
     void** datosNuevos = realloc(heap->vector, tamNuevo * sizeof(void*));
     if(datosNuevos == NULL) {
         return false;
@@ -112,23 +118,13 @@ bool vector_redimensionar(heap_t* heap, size_t tamNuevo) {
 ///////////////////Primitivas
 
 heap_t *heap_crear_arr(void *arreglo[], size_t n, cmp_func_t cmp){
-    heap_t* heapNuevo = malloc(sizeof(heap_t));
-    if(heapNuevo == NULL){
-        return NULL;
-    }
-    void** vectorNuevo = malloc(sizeof(void*)*n);
-    if(vectorNuevo == NULL){
-        free(heapNuevo);
-        return NULL;
-    }
+    heap_t* heapNuevo = heap_crear(cmp);
+    vector_redimensionar(heapNuevo,n+1);
     for(int i = 0; i<n; i++){
-        vectorNuevo[i] = arreglo[i];
+        heapNuevo->vector[i] = arreglo[i];
     }
     heapNuevo->cantidad = n;
-    heapNuevo->tam = n;
-    heapNuevo->cmp = cmp;
-    heapify(vectorNuevo,n,cmp);
-    heapNuevo->vector = vectorNuevo;
+    heapify(heapNuevo->vector,n,cmp);
     return heapNuevo;
 }
 
@@ -174,7 +170,7 @@ bool heap_encolar(heap_t *heap, void *elem){
     if(elem == NULL){
         return false;
     }
-    if (heap->cantidad >= heap->tam -1){
+    if (heap->cantidad * CONDICION_AUMENTO >= heap->tam -1){
         if(vector_redimensionar(heap,heap->tam * FACTOR_REDIM) == false){
             return false;
         }
@@ -195,9 +191,9 @@ void* heap_desencolar(heap_t *heap){
     swap(heap->vector,0,heap->cantidad-1);
     heap->cantidad -= 1;
     heap->vector[heap->cantidad] = NULL;
-    downheap(heap,0);
+    downheap_aux(heap->vector,0, heap->cmp, heap->cantidad);
 
-    if ((heap->cantidad * CONDICION_DISMINUCION <= heap->tam) && (heap->cantidad > TAM_INICIAL)){
+    if (heap->cantidad * CONDICION_DISMINUCION <= heap->tam){
         if (vector_redimensionar(heap,heap->tam / FACTOR_REDIM)){
         }
     }
